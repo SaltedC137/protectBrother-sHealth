@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Screen Light Adjust
+GenericName=screen-light-adjust
+Comment=Multi-monitor brightness and color temperature control via xrandr
+Exec=screen-light-adjust
+Icon=screen-light-adjust
+Categories=Settings;HardwareSettings;
+Keywords=screen light adjust;brightness;gamma;xrandr;night mode;护眼;显示器;
+Terminal=false
+StartupNotify=false
