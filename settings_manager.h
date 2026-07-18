@@ -36,6 +36,9 @@ class SettingsManager {
     QString default_preset() const { return m_default_preset; }
     void    set_default_preset(const QString& name) { m_default_preset = name; }
 
+    bool auto_load_default() const { return m_auto_load_default; }
+    void set_auto_load_default(bool v) { m_auto_load_default = v; }
+
     // Config directory path
     static QString config_dir();
 
@@ -46,4 +49,5 @@ class SettingsManager {
     bool                       m_sync_night      = false;
     QByteArray                 m_window_geometry;
     QString                    m_default_preset;
+    bool                       m_auto_load_default = false;
 };

@@ -35,6 +35,7 @@ void SettingsManager::load() {
     m_sync_brightness = root.value("sync_brightness").toBool(false);
     m_sync_night      = root.value("sync_night").toBool(false);
     m_default_preset  = root.value("default_preset").toString();
+    m_auto_load_default = root.value("auto_load_default").toBool(false);
 
     auto geo = root.value("window_geometry").toString();
     if (!geo.isEmpty())
@@ -70,6 +71,7 @@ void SettingsManager::save() {
     root["sync_brightness"] = m_sync_brightness;
     root["sync_night"]      = m_sync_night;
     root["default_preset"]  = m_default_preset;
+    root["auto_load_default"] = m_auto_load_default;
     root["monitors"]        = arr;
 
     if (!m_window_geometry.isEmpty())

@@ -413,6 +413,9 @@ void MainWindow::apply_monitor(int idx) {
 void MainWindow::load_settings() {
     m_settings.load();
 
+    // Suppress signal-triggered save_settings() during initialization
+    m_updating = true;
+
     m_sync_brightness->setChecked(m_settings.sync_brightness());
     m_sync_night->setChecked(m_settings.sync_night());
 
@@ -464,16 +467,23 @@ void MainWindow::load_settings() {
     if (!geo.isEmpty())
         restoreGeometry(geo);
 
-    // Default preset
+    // Default preset: restore checkbox state first, then apply if needed
+    m_load_default_preset->setChecked(m_settings.auto_load_default());
+
     QString def = m_settings.default_preset();
-    if (!def.isEmpty()) {
-        m_load_default_preset->setChecked(true);
+    if (!def.isEmpty() && m_settings.auto_load_default()) {
         auto preset = m_presets.load(def);
-        if (!preset.isEmpty())
+        if (!preset.isEmpty()) {
+            m_updating = false; // apply_preset sets its own guard
             apply_preset(preset);
+        }
     }
 
+    m_updating = false;
     refresh_preset_list();
+
+    // Persist UI state once after full initialization
+    save_settings();
 }
 
 void MainWindow::save_settings() {
@@ -494,8 +504,7 @@ void MainWindow::save_settings() {
     }
 
     m_settings.set_window_geometry(saveGeometry());
-    m_settings.set_default_preset(
-        m_load_default_preset->isChecked() ? m_settings.default_preset() : QString());
+    m_settings.set_auto_load_default(m_load_default_preset->isChecked());
     m_settings.save();
 }
 
@@ -508,13 +517,14 @@ void MainWindow::refresh_preset_list() {
     QString def = m_settings.default_preset();
     auto names = m_presets.list_presets();
     for (const auto& name : names) {
-        auto* item = new QListWidgetItem(name);
+        auto display = (name == def) ? QString("%1  (默认)").arg(name) : name;
+        auto* item = new QListWidgetItem(display);
         if (name == def) {
             QFont f = item->font();
             f.setBold(true);
             item->setFont(f);
-            item->setIcon(QIcon::fromTheme("emblem-default"));
         }
+        item->setData(Qt::UserRole, name); // store real name for operations
         m_preset_list->addItem(item);
     }
 }
@@ -545,8 +555,6 @@ void MainWindow::save_current_as_preset() {
     preset["monitors"] = arr;
 
     if (m_presets.save(name, preset)) {
-        if (m_load_default_preset->isChecked())
-            m_settings.set_default_preset(name);
         m_preset_name_edit->clear();
         refresh_preset_list();
     }
@@ -557,7 +565,7 @@ void MainWindow::load_selected_preset() {
     if (items.isEmpty())
         return;
 
-    QString name = items[0]->text();
+    QString name = items[0]->data(Qt::UserRole).toString();
     auto preset = m_presets.load(name);
     if (preset.isEmpty())
         return;
@@ -569,13 +577,14 @@ void MainWindow::load_selected_preset() {
 }
 
 void MainWindow::on_preset_list_double_clicked(QListWidgetItem* item) {
-    auto preset = m_presets.load(item->text());
+    QString name = item->data(Qt::UserRole).toString();
+    auto preset = m_presets.load(name);
     if (preset.isEmpty())
         return;
 
     apply_preset(preset);
     if (m_load_default_preset->isChecked())
-        m_settings.set_default_preset(item->text());
+        m_settings.set_default_preset(name);
     save_settings();
 }
 
@@ -584,7 +593,7 @@ void MainWindow::delete_selected_preset() {
     if (items.isEmpty())
         return;
 
-    QString name = items[0]->text();
+    QString name = items[0]->data(Qt::UserRole).toString();
     auto reply = QMessageBox::question(this, "确认删除",
         QString("确定要删除预设 \"%1\" 吗？").arg(name),
         QMessageBox::Yes | QMessageBox::No);
@@ -603,7 +612,7 @@ void MainWindow::set_selected_as_default() {
     if (items.isEmpty())
         return;
 
-    QString name = items[0]->text();
+    QString name = items[0]->data(Qt::UserRole).toString();
     m_settings.set_default_preset(name);
     m_load_default_preset->setChecked(true);
     refresh_preset_list();
