@@ -43,6 +43,7 @@ class MainWindow : public QMainWindow {
 
     void save_current_as_preset();
     void load_selected_preset();
+    void set_selected_as_default();
     void delete_selected_preset();
     void on_preset_list_double_clicked(QListWidgetItem* item);
 

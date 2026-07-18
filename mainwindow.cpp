@@ -14,6 +14,7 @@
 #include <QPainter>
 #include <QPixmap>
 #include <QScrollArea>
+#include <QStatusBar>
 #include <QVBoxLayout>
 
 static constexpr int BRIGHTNESS_MIN = 10;
@@ -193,13 +194,14 @@ void MainWindow::setup_ui() {
     save_row->addWidget(save_btn);
     presets_layout->addLayout(save_row);
 
-    // Load / Delete
+    // Load / Delete / Set default
     auto* action_row = new QHBoxLayout;
     auto* load_btn   = new QPushButton("加载预设");
     auto* del_btn    = new QPushButton("删除预设");
+    auto* def_btn    = new QPushButton("设为默认预设");
     action_row->addWidget(load_btn);
     action_row->addWidget(del_btn);
-    action_row->addStretch();
+    action_row->addWidget(def_btn);
     presets_layout->addLayout(action_row);
 
     m_load_default_preset = new QCheckBox("启动时自动加载默认预设");
@@ -226,6 +228,7 @@ void MainWindow::setup_ui() {
     connect(save_btn, &QPushButton::clicked, this, &MainWindow::save_current_as_preset);
     connect(load_btn, &QPushButton::clicked, this, &MainWindow::load_selected_preset);
     connect(del_btn, &QPushButton::clicked, this, &MainWindow::delete_selected_preset);
+    connect(def_btn, &QPushButton::clicked, this, &MainWindow::set_selected_as_default);
     connect(m_preset_list, &QListWidget::itemDoubleClicked, this, &MainWindow::on_preset_list_double_clicked);
 }
 
@@ -491,6 +494,8 @@ void MainWindow::save_settings() {
     }
 
     m_settings.set_window_geometry(saveGeometry());
+    m_settings.set_default_preset(
+        m_load_default_preset->isChecked() ? m_settings.default_preset() : QString());
     m_settings.save();
 }
 
@@ -500,9 +505,18 @@ void MainWindow::save_settings() {
 
 void MainWindow::refresh_preset_list() {
     m_preset_list->clear();
+    QString def = m_settings.default_preset();
     auto names = m_presets.list_presets();
-    for (const auto& name : names)
-        m_preset_list->addItem(name);
+    for (const auto& name : names) {
+        auto* item = new QListWidgetItem(name);
+        if (name == def) {
+            QFont f = item->font();
+            f.setBold(true);
+            item->setFont(f);
+            item->setIcon(QIcon::fromTheme("emblem-default"));
+        }
+        m_preset_list->addItem(item);
+    }
 }
 
 void MainWindow::save_current_as_preset() {
@@ -577,8 +591,27 @@ void MainWindow::delete_selected_preset() {
 
     if (reply == QMessageBox::Yes) {
         m_presets.remove(name);
+        if (m_settings.default_preset() == name)
+            m_settings.set_default_preset(QString());
         refresh_preset_list();
+        save_settings();
     }
+}
+
+void MainWindow::set_selected_as_default() {
+    auto items = m_preset_list->selectedItems();
+    if (items.isEmpty())
+        return;
+
+    QString name = items[0]->text();
+    m_settings.set_default_preset(name);
+    m_load_default_preset->setChecked(true);
+    refresh_preset_list();
+    save_settings();
+
+    auto status = statusBar();
+    if (status)
+        status->showMessage(QString("已将 \"%1\" 设为默认预设").arg(name), 3000);
 }
 
 void MainWindow::apply_preset(const QJsonObject& preset) {
