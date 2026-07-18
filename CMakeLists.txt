@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(screen-light-adjust VERSION 1.0.0 LANGUAGES CXX)
+project(screen-light-adjust VERSION 1.0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -18,6 +18,8 @@ add_executable(screen-light-adjust
     main.cpp
     color_temp.h color_temp.cpp
     monitor_ctrl.h monitor_ctrl.cpp
+    settings_manager.h settings_manager.cpp
+    preset_manager.h preset_manager.cpp
     mainwindow.h mainwindow.cpp
 )
 
