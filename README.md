@@ -28,15 +28,12 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 ## 安装包
-在 Debian/Ubuntu 上构建 DEB：
-```bash
-cmake --build build --target deb
-```
-在 Fedora/RHEL 等 RPM 系统上构建 RPM：
-```bash
-cmake --build build --target rpm
-```
-DEB/RPM 元数据声明 `xrandr`、`redshift` 和 `gammastep` 运行依赖，由系统包管理器在安装时一并安装。RPM 构建需要 `rpmbuild`；Qt Wayland 运行需要对应平台插件。
+DEB/RPM 必须使用目标发行版提供的 Qt 开发库构建。若开发环境通过 QT_HOME_PATH 使用了单独安装的 Qt，请使用新的构建目录并启用系统 Qt：
+
+    cmake -S . -B build/package -DSCREEN_LIGHT_ADJUST_USE_SYSTEM_QT=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
+    cmake --build build/package --target deb
+
+在 Fedora/RHEL 等 RPM 系统上，将最后一个目标改为 rpm。Debian/Ubuntu 构建需要 qt6-base-dev；Fedora/RHEL 构建需要发行版对应的 Qt 开发包。DEB/RPM 元数据声明 xrandr、redshift 和 gammastep 运行依赖，由系统包管理器在安装时一并安装。RPM 构建需要 rpmbuild；Qt Wayland 运行需要对应平台插件。
 ## 配置文件
 - 应用配置：`$XDG_CONFIG_HOME/screen-light-adjust/settings.json`；未设置 `XDG_CONFIG_HOME` 时使用 `~/.config/screen-light-adjust/settings.json`。
 - 预设：同目录下的 `presets/<名称>.json`。

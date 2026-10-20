@@ -1,20 +1,60 @@
 cmake_minimum_required(VERSION 3.16)
-project(screen-light-adjust VERSION 1.1.0 LANGUAGES CXX)
+project(screen-light-adjust VERSION 1.1.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
-if(NOT "$ENV{QT_HOME_PATH}" STREQUAL "")
+set(_system_qt_default OFF)
+if("$ENV{QT_HOME_PATH}" STREQUAL "")
+    set(_system_qt_default ON)
+endif()
+option(SCREEN_LIGHT_ADJUST_USE_SYSTEM_QT
+    "Use the distribution Qt installation for portable packages"
+    "${_system_qt_default}")
+
+if(SCREEN_LIGHT_ADJUST_USE_SYSTEM_QT)
+    # A package build must not reuse a cached custom Qt configuration.
+    unset(Qt6_DIR CACHE)
+    unset(Qt6Core_DIR CACHE)
+    unset(Qt6Widgets_DIR CACHE)
+    unset(Qt6Test_DIR CACHE)
+elseif(NOT "$ENV{QT_HOME_PATH}" STREQUAL "")
     list(APPEND CMAKE_PREFIX_PATH "$ENV{QT_HOME_PATH}")
     set(QT_PLUGIN_DIR "$ENV{QT_HOME_PATH}/plugins")
 endif()
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+if(SCREEN_LIGHT_ADJUST_USE_SYSTEM_QT)
+    if(DEFINED CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH)
+        set(_find_system_environment_path_defined ON)
+        set(_find_system_environment_path "${CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH}")
+    else()
+        set(_find_system_environment_path_defined OFF)
+    endif()
+    set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH FALSE)
+endif()
+
+find_package(Qt6 6.4 REQUIRED COMPONENTS Widgets)
 include(CTest)
 
 if(BUILD_TESTING)
-    find_package(Qt6 REQUIRED COMPONENTS Test)
+    find_package(Qt6 6.4 REQUIRED COMPONENTS Test)
+endif()
+
+if(SCREEN_LIGHT_ADJUST_USE_SYSTEM_QT)
+    if(_find_system_environment_path_defined)
+        set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH "${_find_system_environment_path}")
+    else()
+        unset(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH)
+    endif()
+    unset(_find_system_environment_path_defined)
+    unset(_find_system_environment_path)
+
+    if(NOT Qt6Core_DIR MATCHES "^/usr/")
+        message(FATAL_ERROR
+            "System Qt was requested, but Qt6Core was resolved from '${Qt6Core_DIR}'. "
+            "Install the distribution's Qt development package and use a fresh build directory.")
+    endif()
 endif()
 
 # Keep the build tree usable with a non-system Qt installation. Installed
@@ -25,7 +65,10 @@ endif()
 
 # -------------------- Binary --------------------
 
-set(QT_LIB_DIR "$ENV{QT_HOME_PATH}/lib")
+set(QT_LIB_DIR "")
+if(NOT SCREEN_LIGHT_ADJUST_USE_SYSTEM_QT AND NOT "$ENV{QT_HOME_PATH}" STREQUAL "")
+    set(QT_LIB_DIR "$ENV{QT_HOME_PATH}/lib")
+endif()
 
 add_library(screen-light-adjust-core STATIC
     include/break_reminder.h
@@ -102,11 +145,17 @@ endif()
 
 # Convenience target: cmake --build --preset <name> --target deb
 add_custom_target(deb
+    COMMAND ${CMAKE_COMMAND}
+        -DSCREEN_LIGHT_ADJUST_USE_SYSTEM_QT=${SCREEN_LIGHT_ADJUST_USE_SYSTEM_QT}
+        -P "${PROJECT_SOURCE_DIR}/cmake/require_system_qt.cmake"
     COMMAND ${CMAKE_CPACK_COMMAND} -G DEB
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     COMMENT "Generating .deb package…")
 
 add_custom_target(rpm
+    COMMAND ${CMAKE_COMMAND}
+        -DSCREEN_LIGHT_ADJUST_USE_SYSTEM_QT=${SCREEN_LIGHT_ADJUST_USE_SYSTEM_QT}
+        -P "${PROJECT_SOURCE_DIR}/cmake/require_system_qt.cmake"
     COMMAND ${CMAKE_CPACK_COMMAND} -G RPM
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     COMMENT "Generating .rpm package…")
