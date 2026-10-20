@@ -18,11 +18,11 @@
 
 struct MonitorWidgets {
     QLabel*    name_label        = nullptr;
-    QSlider*   brightness_slider = nullptr;
-    QLabel*    brightness_val    = nullptr;
+    QSlider   *brightness_slider = nullptr;
+    QSpinBox*  brightness_spin   = nullptr;
     QCheckBox* night_mode        = nullptr;
-    QSlider*   warmth_slider     = nullptr;
-    QLabel*    warmth_val        = nullptr;
+    QSlider   *warmth_slider     = nullptr;
+    QSpinBox*  warmth_spin       = nullptr;
     QWidget*   warmth_container  = nullptr;
     QString    output_name;
 };
