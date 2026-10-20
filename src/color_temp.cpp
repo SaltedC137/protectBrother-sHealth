@@ -1,4 +1,4 @@
-#include "screen_light_adjust/color_temp.h"
+#include "color_temp.h"
 #include <algorithm>
 #include <cmath>
 

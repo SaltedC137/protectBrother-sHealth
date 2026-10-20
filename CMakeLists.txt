@@ -28,13 +28,13 @@ endif()
 set(QT_LIB_DIR "$ENV{QT_HOME_PATH}/lib")
 
 add_library(screen-light-adjust-core STATIC
-    include/screen_light_adjust/break_reminder.h
-    include/screen_light_adjust/break_timer.h
-    include/screen_light_adjust/color_temp.h
-    include/screen_light_adjust/mainwindow.h
-    include/screen_light_adjust/monitor_ctrl.h
-    include/screen_light_adjust/preset_manager.h
-    include/screen_light_adjust/settings_manager.h
+    include/break_reminder.h
+    include/break_timer.h
+    include/color_temp.h
+    include/mainwindow.h
+    include/monitor_ctrl.h
+    include/preset_manager.h
+    include/settings_manager.h
     src/break_reminder.cpp
     src/break_timer.cpp
     src/color_temp.cpp

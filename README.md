@@ -14,7 +14,7 @@ Wayland 色温依赖合成器提供的 gamma-control 协议；无法连接时，
 
 ## 项目结构
 
-- `include/screen_light_adjust/`：显示控制、统一预设、休息计时和多屏提醒的公共头文件。
+- `include/`：显示控制、统一预设、休息计时和多屏提醒的公共头文件。
 - `src/`：应用入口和功能实现；功能代码由 `screen-light-adjust-core` 目标统一编译。
 - `tests/`：统一预设、计时和多屏提醒检查。
 - `resources/`：桌面入口、图标和 Qt 插件路径配置。

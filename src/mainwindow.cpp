@@ -1,6 +1,6 @@
-#include "screen_light_adjust/mainwindow.h"
-#include "screen_light_adjust/color_temp.h"
-#include "screen_light_adjust/monitor_ctrl.h"
+#include "mainwindow.h"
+#include "color_temp.h"
+#include "monitor_ctrl.h"
 
 #include <QApplication>
 #include <QCloseEvent>

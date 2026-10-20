@@ -1,4 +1,4 @@
-#include "screen_light_adjust/break_reminder.h"
+#include "break_reminder.h"
 
 #include <QApplication>
 #include <QCloseEvent>

@@ -1,4 +1,4 @@
-#include "screen_light_adjust/settings_manager.h"
+#include "settings_manager.h"
 
 #include <QDir>
 #include <QFile>

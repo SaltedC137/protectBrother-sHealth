@@ -1,7 +1,7 @@
-#include "screen_light_adjust/break_reminder.h"
-#include "screen_light_adjust/break_timer.h"
-#include "screen_light_adjust/preset_manager.h"
-#include "screen_light_adjust/settings_manager.h"
+#include "break_reminder.h"
+#include "break_timer.h"
+#include "preset_manager.h"
+#include "settings_manager.h"
 
 #include <QApplication>
 #include <QJsonObject>
