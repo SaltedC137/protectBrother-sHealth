@@ -1,6 +1,6 @@
-#include "monitor_ctrl.h"
+#include "screen_light_adjust/monitor_ctrl.h"
 
-#include "color_temp.h"
+#include "screen_light_adjust/color_temp.h"
 
 #include <QGuiApplication>
 #include <QCoreApplication>

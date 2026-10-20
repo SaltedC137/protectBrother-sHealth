@@ -1,8 +1,8 @@
 #pragma once
-#include "preset_manager.h"
-#include "protect-eyes/intervalpage.h"
-#include "protect-eyes/timer.h"
-#include "settings_manager.h"
+#include "screen_light_adjust/break_reminder.h"
+#include "screen_light_adjust/break_timer.h"
+#include "screen_light_adjust/preset_manager.h"
+#include "screen_light_adjust/settings_manager.h"
 
 #include <QCheckBox>
 #include <QLabel>
@@ -42,8 +42,8 @@ class MainWindow : public QMainWindow {
     void on_warmth_changed(int idx, int value);
     void on_tray_activated(QSystemTrayIcon::ActivationReason reason);
     void on_break_settings_changed();
-    void on_worktime_timeout(quint16 break_minutes);
-    void on_interval_timeout();
+    void on_work_period_finished(int break_minutes);
+    void on_break_period_finished();
     void update_countdown(const QTime& remaining, bool is_working);
     void set_day_mode();
     void set_night_mode();
@@ -81,7 +81,7 @@ class MainWindow : public QMainWindow {
     QSpinBox*        m_break_minutes     = nullptr;
     QLineEdit*       m_break_message     = nullptr;
     QLabel*          m_countdown_label   = nullptr;
-    Timer*           m_timer             = nullptr;
-    IntervalPage*    m_interval_page     = nullptr;
+    BreakTimer*      m_timer             = nullptr;
+    BreakReminder*   m_break_reminder    = nullptr;
     bool             m_updating          = false;
 };

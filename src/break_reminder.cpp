@@ -1,4 +1,4 @@
-#include "intervalpage.h"
+#include "screen_light_adjust/break_reminder.h"
 
 #include <QApplication>
 #include <QCloseEvent>
@@ -95,7 +95,7 @@ class BreakWindow final : public QWidget {
 };
 }
 
-IntervalPage::IntervalPage(QObject* parent) : QObject(parent) {
+BreakReminder::BreakReminder(QObject* parent) : QObject(parent) {
     connect(qApp, &QGuiApplication::screenAdded, this, [this](QScreen* screen) {
         if (m_active)
             addWindow(screen);
@@ -115,23 +115,23 @@ IntervalPage::IntervalPage(QObject* parent) : QObject(parent) {
     });
 }
 
-IntervalPage::~IntervalPage() {
-    closeIntervalPage();
+BreakReminder::~BreakReminder() {
+    close_break();
 }
 
-void IntervalPage::showIntervalPage(quint16 break_minutes) {
-    showIntervalPageWithMessage(break_minutes,
-                                QStringLiteral("请暂停工作，眺望远方并活动身体。"));
+void BreakReminder::show_break(int break_minutes) {
+    show_break_with_message(break_minutes,
+                            QStringLiteral("请暂停工作，眺望远方并活动身体。"));
 }
 
-void IntervalPage::showIntervalPageWithMessage(int break_minutes, const QString& message) {
-    showIntervalPageOnScreens(break_minutes, message, QGuiApplication::screens());
+void BreakReminder::show_break_with_message(int break_minutes, const QString& message) {
+    show_break_on_screens(break_minutes, message, QGuiApplication::screens());
 }
 
-void IntervalPage::showIntervalPageOnScreens(int break_minutes,
-                                             const QString& message,
-                                             const QList<QScreen*>& screens) {
-    closeIntervalPage();
+void BreakReminder::show_break_on_screens(int break_minutes,
+                                         const QString& message,
+                                         const QList<QScreen*>& screens) {
+    close_break();
     m_message = message.trimmed().isEmpty()
                     ? QStringLiteral("请暂停工作，眺望远方并活动身体。")
                     : message.trimmed();
@@ -142,7 +142,7 @@ void IntervalPage::showIntervalPageOnScreens(int break_minutes,
         addWindow(screen);
 }
 
-void IntervalPage::addWindow(QScreen* screen) {
+void BreakReminder::addWindow(QScreen* screen) {
     if (!screen)
         return;
 
@@ -152,7 +152,7 @@ void IntervalPage::addWindow(QScreen* screen) {
     window->raise();
 }
 
-void IntervalPage::closeIntervalPage() {
+void BreakReminder::close_break() {
     m_active = false;
     for (const auto& guarded_window : m_windows) {
         if (auto* widget = guarded_window.data()) {
@@ -163,13 +163,13 @@ void IntervalPage::closeIntervalPage() {
     m_windows.clear();
 }
 
-int IntervalPage::visibleWindowCount() const {
+int BreakReminder::visible_window_count() const {
     return static_cast<int>(std::count_if(m_windows.cbegin(), m_windows.cend(), [](const auto& window) {
         return window && window->isVisible();
     }));
 }
 
-QStringList IntervalPage::visibleMessages() const {
+QStringList BreakReminder::visible_messages() const {
     QStringList messages;
     for (const auto& guarded_window : m_windows) {
         if (const auto* widget = guarded_window.data()) {

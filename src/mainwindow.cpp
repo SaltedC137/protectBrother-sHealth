@@ -1,6 +1,6 @@
-#include "mainwindow.h"
-#include "color_temp.h"
-#include "monitor_ctrl.h"
+#include "screen_light_adjust/mainwindow.h"
+#include "screen_light_adjust/color_temp.h"
+#include "screen_light_adjust/monitor_ctrl.h"
 
 #include <QApplication>
 #include <QCloseEvent>
@@ -322,15 +322,15 @@ void MainWindow::setup_tray() {
 }
 
 void MainWindow::setup_break_scheduler() {
-    m_timer = new Timer(m_work_minutes->value(), m_break_minutes->value(), this);
-    m_interval_page = new IntervalPage(this);
+    m_timer = new BreakTimer(m_work_minutes->value(), m_break_minutes->value(), this);
+    m_break_reminder = new BreakReminder(this);
 
-    connect(m_timer, &Timer::worktime_timeout, this, &MainWindow::on_worktime_timeout);
-    connect(m_timer, &Timer::interval_timeout, this, &MainWindow::on_interval_timeout);
-    connect(m_timer, &Timer::remainingTimeChanged, this, &MainWindow::update_countdown);
+    connect(m_timer, &BreakTimer::work_period_finished, this, &MainWindow::on_work_period_finished);
+    connect(m_timer, &BreakTimer::break_period_finished, this, &MainWindow::on_break_period_finished);
+    connect(m_timer, &BreakTimer::remaining_time_changed, this, &MainWindow::update_countdown);
 
     if (m_break_enabled->isChecked())
-        m_timer->startWork();
+        m_timer->start_work();
     else
         m_countdown_label->setText(QStringLiteral("休息提醒已暂停"));
 }
@@ -353,32 +353,32 @@ void MainWindow::on_break_settings_changed() {
         return;
 
     if (m_timer) {
-        m_timer->setDurations(m_work_minutes->value(), m_break_minutes->value());
+        m_timer->set_durations(m_work_minutes->value(), m_break_minutes->value());
         if (m_break_enabled->isChecked()) {
-            m_interval_page->closeIntervalPage();
-            m_timer->startWork();
+            m_break_reminder->close_break();
+            m_timer->start_work();
         } else {
             m_timer->stop();
-            m_interval_page->closeIntervalPage();
+            m_break_reminder->close_break();
             m_countdown_label->setText(QStringLiteral("休息提醒已暂停"));
         }
     }
     save_settings();
 }
 
-void MainWindow::on_worktime_timeout(quint16 break_minutes) {
+void MainWindow::on_work_period_finished(int break_minutes) {
     Q_UNUSED(break_minutes);
     if (!m_break_enabled->isChecked())
         return;
 
-    m_interval_page->showIntervalPageWithMessage(m_break_minutes->value(), m_break_message->text());
-    m_timer->startInterval();
+    m_break_reminder->show_break_with_message(m_break_minutes->value(), m_break_message->text());
+    m_timer->start_break();
 }
 
-void MainWindow::on_interval_timeout() {
-    m_interval_page->closeIntervalPage();
+void MainWindow::on_break_period_finished() {
+    m_break_reminder->close_break();
     if (m_break_enabled->isChecked())
-        m_timer->startWork();
+        m_timer->start_work();
 }
 
 void MainWindow::update_countdown(const QTime& remaining, bool is_working) {

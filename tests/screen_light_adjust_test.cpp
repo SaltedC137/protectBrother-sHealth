@@ -1,7 +1,7 @@
-#include "../preset_manager.h"
-#include "../protect-eyes/intervalpage.h"
-#include "../protect-eyes/timer.h"
-#include "../settings_manager.h"
+#include "screen_light_adjust/break_reminder.h"
+#include "screen_light_adjust/break_timer.h"
+#include "screen_light_adjust/preset_manager.h"
+#include "screen_light_adjust/settings_manager.h"
 
 #include <QApplication>
 #include <QJsonObject>
@@ -25,12 +25,12 @@ void ScreenLightAdjustTest::reminderCreatesOneWindowPerScreen() {
     QVERIFY(!available_screens.isEmpty());
 
     QList<QScreen*> targets{available_screens.first(), available_screens.first(), available_screens.first()};
-    IntervalPage reminder;
-    reminder.showIntervalPageOnScreens(20, QStringLiteral("休息一下"), targets);
+    BreakReminder reminder;
+    reminder.show_break_on_screens(20, QStringLiteral("休息一下"), targets);
 
-    QCOMPARE(reminder.visibleWindowCount(), targets.size());
-    reminder.closeIntervalPage();
-    QCOMPARE(reminder.visibleWindowCount(), 0);
+    QCOMPARE(reminder.visible_window_count(), targets.size());
+    reminder.close_break();
+    QCOMPARE(reminder.visible_window_count(), 0);
 }
 
 void ScreenLightAdjustTest::reminderUsesTheSameMessageOnEveryScreen() {
@@ -39,25 +39,25 @@ void ScreenLightAdjustTest::reminderUsesTheSameMessageOnEveryScreen() {
 
     const QString message = QStringLiteral("请休息并眺望远方");
     QList<QScreen*> targets{available_screens.first(), available_screens.first()};
-    IntervalPage reminder;
-    reminder.showIntervalPageOnScreens(15, message, targets);
+    BreakReminder reminder;
+    reminder.show_break_on_screens(15, message, targets);
 
-    QCOMPARE(reminder.visibleMessages(), QStringList({message, message}));
-    reminder.closeIntervalPage();
+    QCOMPARE(reminder.visible_messages(), QStringList({message, message}));
+    reminder.close_break();
 }
 
 void ScreenLightAdjustTest::timerTracksWorkAndBreakPhases() {
-    Timer timer(50, 10);
-    QVERIFY(timer.isWorking());
+    BreakTimer timer(50, 10);
+    QVERIFY(timer.is_working());
 
-    timer.startWork();
-    QVERIFY(timer.getRemainingTime() > QTime(0, 0, 0));
-    timer.startInterval();
-    QVERIFY(!timer.isWorking());
-    QVERIFY(timer.getRemainingTime() > QTime(0, 0, 0));
+    timer.start_work();
+    QVERIFY(timer.remaining_time() > QTime(0, 0, 0));
+    timer.start_break();
+    QVERIFY(!timer.is_working());
+    QVERIFY(timer.remaining_time() > QTime(0, 0, 0));
 
     timer.stop();
-    QCOMPARE(timer.getRemainingTime(), QTime(0, 0, 0));
+    QCOMPARE(timer.remaining_time(), QTime(0, 0, 0));
 }
 
 void ScreenLightAdjustTest::settingsPersistBreakOptionsAndDefaultPreset() {

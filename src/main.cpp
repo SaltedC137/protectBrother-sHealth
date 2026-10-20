@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+#include "screen_light_adjust/mainwindow.h"
 #include <QApplication>
 
 int main(int argc, char* argv[]) {

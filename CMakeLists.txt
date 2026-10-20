@@ -27,18 +27,29 @@ endif()
 
 set(QT_LIB_DIR "$ENV{QT_HOME_PATH}/lib")
 
-add_executable(screen-light-adjust
-    main.cpp
-    color_temp.h color_temp.cpp
-    monitor_ctrl.h monitor_ctrl.cpp
-    settings_manager.h settings_manager.cpp
-    preset_manager.h preset_manager.cpp
-    mainwindow.h mainwindow.cpp
-    protect-eyes/intervalpage.h protect-eyes/intervalpage.cpp
-    protect-eyes/timer.h protect-eyes/timer.cpp
+add_library(screen-light-adjust-core STATIC
+    include/screen_light_adjust/break_reminder.h
+    include/screen_light_adjust/break_timer.h
+    include/screen_light_adjust/color_temp.h
+    include/screen_light_adjust/mainwindow.h
+    include/screen_light_adjust/monitor_ctrl.h
+    include/screen_light_adjust/preset_manager.h
+    include/screen_light_adjust/settings_manager.h
+    src/break_reminder.cpp
+    src/break_timer.cpp
+    src/color_temp.cpp
+    src/mainwindow.cpp
+    src/monitor_ctrl.cpp
+    src/preset_manager.cpp
+    src/settings_manager.cpp
 )
+target_include_directories(screen-light-adjust-core
+    PUBLIC "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(screen-light-adjust-core PUBLIC Qt6::Widgets)
 
-target_link_libraries(screen-light-adjust PRIVATE Qt6::Widgets)
+add_executable(screen-light-adjust src/main.cpp)
+target_link_libraries(screen-light-adjust PRIVATE screen-light-adjust-core)
+
 set_target_properties(screen-light-adjust PROPERTIES
     INSTALL_RPATH ""
     BUILD_RPATH "${QT_LIB_DIR}"
@@ -82,12 +93,8 @@ include(CPack)
 if(BUILD_TESTING)
     add_executable(screen-light-adjust-tests
         tests/screen_light_adjust_test.cpp
-        protect-eyes/intervalpage.h protect-eyes/intervalpage.cpp
-        protect-eyes/timer.h protect-eyes/timer.cpp
-        settings_manager.h settings_manager.cpp
-        preset_manager.h preset_manager.cpp
     )
-    target_link_libraries(screen-light-adjust-tests PRIVATE Qt6::Widgets Qt6::Test)
+    target_link_libraries(screen-light-adjust-tests PRIVATE screen-light-adjust-core Qt6::Test)
     add_test(NAME screen-light-adjust-tests COMMAND screen-light-adjust-tests)
     set_tests_properties(screen-light-adjust-tests PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
