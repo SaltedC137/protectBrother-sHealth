@@ -1,18 +1,31 @@
 cmake_minimum_required(VERSION 3.16)
-project(screen-light-adjust VERSION 1.0.1 LANGUAGES CXX)
+project(screen-light-adjust VERSION 1.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
-set(CMAKE_PREFIX_PATH "/home/azzato/Programs/Qt/6.10.2/gcc_64")
+if(NOT "$ENV{QT_HOME_PATH}" STREQUAL "")
+    list(APPEND CMAKE_PREFIX_PATH "$ENV{QT_HOME_PATH}")
+    set(QT_PLUGIN_DIR "$ENV{QT_HOME_PATH}/plugins")
+endif()
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
+include(CTest)
+
+if(BUILD_TESTING)
+    find_package(Qt6 REQUIRED COMPONENTS Test)
+endif()
+
+# Keep the build tree usable with a non-system Qt installation. Installed
+# packages use the target system's normal Qt plugin search path.
+if(QT_PLUGIN_DIR)
+    configure_file(resources/qt.conf "${CMAKE_CURRENT_BINARY_DIR}/qt.conf" @ONLY)
+endif()
 
 # -------------------- Binary --------------------
 
-set(QT_LIB_DIR "/home/azzato/Programs/Qt/6.10.2/gcc_64/lib")
-set(QT_PLUGIN_DIR "/home/azzato/Programs/Qt/6.10.2/gcc_64/plugins")
+set(QT_LIB_DIR "$ENV{QT_HOME_PATH}/lib")
 
 add_executable(screen-light-adjust
     main.cpp
@@ -21,38 +34,40 @@ add_executable(screen-light-adjust
     settings_manager.h settings_manager.cpp
     preset_manager.h preset_manager.cpp
     mainwindow.h mainwindow.cpp
+    protect-eyes/intervalpage.h protect-eyes/intervalpage.cpp
+    protect-eyes/timer.h protect-eyes/timer.cpp
 )
 
 target_link_libraries(screen-light-adjust PRIVATE Qt6::Widgets)
 set_target_properties(screen-light-adjust PROPERTIES
-    INSTALL_RPATH "${QT_LIB_DIR}"
+    INSTALL_RPATH ""
     BUILD_RPATH "${QT_LIB_DIR}"
 )
-
-# qt.conf tells Qt where to find plugins at runtime
-configure_file(
-    "${CMAKE_SOURCE_DIR}/resources/qt.conf"
-    "${CMAKE_CURRENT_BINARY_DIR}/qt.conf" COPYONLY)
 
 # -------------------- Install rules --------------------
 
 set(CPACK_PACKAGE_NAME "screen-light-adjust")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Multi-monitor brightness and color temperature control via xrandr")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Multi-monitor display adjustment and scheduled break reminders")
+set(CPACK_GENERATOR "DEB;RPM")
+set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")
 
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "user")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Screen Light Adjust contributors")
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
-set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS OFF)
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "x11-xserver-utils")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "x11-xserver-utils, redshift, gammastep, qt6-qpa-plugins, qt6-wayland")
+set(CPACK_RPM_PACKAGE_REQUIRES "xrandr, redshift, gammastep, qt6-qtbase-gui, qt6-qtwayland")
+set(CPACK_RPM_PACKAGE_AUTOREQ ON)
 
-install(TARGETS screen-light-adjust RUNTIME DESTINATION /usr/local/bin)
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/qt.conf"
-        DESTINATION /usr/local/bin)
-install(PROGRAMS "resources/screen-light-adjust.desktop"
-        DESTINATION /usr/local/share/applications)
+include(GNUInstallDirs)
+install(TARGETS screen-light-adjust RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+install(FILES "resources/screen-light-adjust.desktop"
+        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/applications"
+        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 install(FILES "resources/screen-light-adjust.svg"
-        DESTINATION /usr/local/share/icons/hicolor/scalable/apps)
+        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/apps"
+        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 
 configure_file("${CMAKE_SOURCE_DIR}/cmake/postinst.in"
     "${CMAKE_CURRENT_BINARY_DIR}/postinst" @ONLY)
@@ -64,8 +79,27 @@ set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
 
 include(CPack)
 
+if(BUILD_TESTING)
+    add_executable(screen-light-adjust-tests
+        tests/screen_light_adjust_test.cpp
+        protect-eyes/intervalpage.h protect-eyes/intervalpage.cpp
+        protect-eyes/timer.h protect-eyes/timer.cpp
+        settings_manager.h settings_manager.cpp
+        preset_manager.h preset_manager.cpp
+    )
+    target_link_libraries(screen-light-adjust-tests PRIVATE Qt6::Widgets Qt6::Test)
+    add_test(NAME screen-light-adjust-tests COMMAND screen-light-adjust-tests)
+    set_tests_properties(screen-light-adjust-tests PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()
+
 # Convenience target: cmake --build --preset <name> --target deb
 add_custom_target(deb
     COMMAND ${CMAKE_CPACK_COMMAND} -G DEB
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     COMMENT "Generating .deb package…")
+
+add_custom_target(rpm
+    COMMAND ${CMAKE_CPACK_COMMAND} -G RPM
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    COMMENT "Generating .rpm package…")

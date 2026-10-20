@@ -1,5 +1,7 @@
 #pragma once
 #include "preset_manager.h"
+#include "protect-eyes/intervalpage.h"
+#include "protect-eyes/timer.h"
 #include "settings_manager.h"
 
 #include <QCheckBox>
@@ -8,6 +10,7 @@
 #include <QListWidget>
 #include <QMainWindow>
 #include <QPushButton>
+#include <QSpinBox>
 #include <QSlider>
 #include <QSystemTrayIcon>
 #include <QTabWidget>
@@ -38,6 +41,10 @@ class MainWindow : public QMainWindow {
     void on_night_mode_toggled(int idx, bool checked);
     void on_warmth_changed(int idx, int value);
     void on_tray_activated(QSystemTrayIcon::ActivationReason reason);
+    void on_break_settings_changed();
+    void on_worktime_timeout(quint16 break_minutes);
+    void on_interval_timeout();
+    void update_countdown(const QTime& remaining, bool is_working);
     void set_day_mode();
     void set_night_mode();
 
@@ -50,11 +57,13 @@ class MainWindow : public QMainWindow {
   private:
     void setup_ui();
     void setup_tray();
+    void setup_break_scheduler();
     void apply_monitor(int idx);
     void apply_preset(const QJsonObject& preset);
     void load_settings();
     void save_settings();
     void refresh_preset_list();
+    void set_break_controls(const QJsonObject& settings);
 
     SettingsManager m_settings;
     PresetManager   m_presets;
@@ -67,6 +76,12 @@ class MainWindow : public QMainWindow {
     QSystemTrayIcon* m_tray_icon         = nullptr;
     QListWidget*     m_preset_list       = nullptr;
     QLineEdit*       m_preset_name_edit  = nullptr;
-    QCheckBox*       m_load_default_preset = nullptr;
+    QCheckBox*       m_break_enabled     = nullptr;
+    QSpinBox*        m_work_minutes      = nullptr;
+    QSpinBox*        m_break_minutes     = nullptr;
+    QLineEdit*       m_break_message     = nullptr;
+    QLabel*          m_countdown_label   = nullptr;
+    Timer*           m_timer             = nullptr;
+    IntervalPage*    m_interval_page     = nullptr;
     bool             m_updating          = false;
 };

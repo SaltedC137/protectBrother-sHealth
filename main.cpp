@@ -3,9 +3,9 @@
 
 int main(int argc, char* argv[]) {
 	QApplication app(argc, argv);
-	app.setApplicationName("screen-light-adjust");
+	app.setApplicationName("Screen Light Adjust");
 	app.setOrganizationName("screen-light-adjust");
-	app.setQuitOnLastWindowClosed(false);  // keep running in tray
+	app.setDesktopFileName("screen-light-adjust");
 
 	MainWindow w;
 	w.show();

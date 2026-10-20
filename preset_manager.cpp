@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QFile>
 #include <QJsonDocument>
+#include <QSaveFile>
 
 PresetManager::PresetManager() {
     m_dir_path = SettingsManager::config_dir() + "/presets";
@@ -11,7 +12,9 @@ PresetManager::PresetManager() {
 }
 
 QString PresetManager::preset_file_path(const QString& name) const {
-    return m_dir_path + "/" + name + ".json";
+    if (name.isEmpty() || name == "." || name == ".." || name.contains('/') || name.contains('\\'))
+        return {};
+    return QDir(m_dir_path).filePath(name + ".json");
 }
 
 QStringList PresetManager::list_presets() {
@@ -25,14 +28,24 @@ QStringList PresetManager::list_presets() {
 }
 
 bool PresetManager::save(const QString& name, const QJsonObject& data) {
-    QFile file(preset_file_path(name));
+    const auto path = preset_file_path(name);
+    if (path.isEmpty())
+        return false;
+
+    QSaveFile file(path);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
         return false;
-    return file.write(QJsonDocument(data).toJson()) > 0;
+
+    const auto contents = QJsonDocument(data).toJson();
+    return file.write(contents) == contents.size() && file.commit();
 }
 
 QJsonObject PresetManager::load(const QString& name) {
-    QFile file(preset_file_path(name));
+    const auto path = preset_file_path(name);
+    if (path.isEmpty())
+        return {};
+
+    QFile file(path);
     if (!file.open(QIODevice::ReadOnly))
         return {};
 
@@ -43,9 +56,11 @@ QJsonObject PresetManager::load(const QString& name) {
 }
 
 bool PresetManager::remove(const QString& name) {
-    return QFile::remove(preset_file_path(name));
+    const auto path = preset_file_path(name);
+    return !path.isEmpty() && QFile::remove(path);
 }
 
 bool PresetManager::exists(const QString& name) {
-    return QFile::exists(preset_file_path(name));
+    const auto path = preset_file_path(name);
+    return !path.isEmpty() && QFile::exists(path);
 }

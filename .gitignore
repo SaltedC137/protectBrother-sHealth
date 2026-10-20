@@ -55,6 +55,9 @@ dkms.conf
 
 # Build directories
 build/
+_CPack_Packages/
+*.deb
+*.rpm
 bin/
 obj/
 out/

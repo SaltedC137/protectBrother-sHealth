@@ -5,6 +5,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QSaveFile>
 #include <QStandardPaths>
 
 SettingsManager::SettingsManager() {
@@ -35,7 +36,11 @@ void SettingsManager::load() {
     m_sync_brightness = root.value("sync_brightness").toBool(false);
     m_sync_night      = root.value("sync_night").toBool(false);
     m_default_preset  = root.value("default_preset").toString();
-    m_auto_load_default = root.value("auto_load_default").toBool(false);
+    m_break_enabled  = root.value("break_enabled").toBool(true);
+    m_work_minutes   = root.value("work_minutes").toInt(120);
+    m_break_minutes  = root.value("break_minutes").toInt(20);
+    m_break_message  = root.value("break_message").toString(
+        QStringLiteral("该休息一下了，眺望远方并活动身体。"));
 
     auto geo = root.value("window_geometry").toString();
     if (!geo.isEmpty())
@@ -67,17 +72,24 @@ void SettingsManager::save() {
     }
 
     QJsonObject root;
-    root["version"]         = 1;
+    root["version"]         = 2;
     root["sync_brightness"] = m_sync_brightness;
     root["sync_night"]      = m_sync_night;
     root["default_preset"]  = m_default_preset;
-    root["auto_load_default"] = m_auto_load_default;
+    root["break_enabled"]   = m_break_enabled;
+    root["work_minutes"]    = m_work_minutes;
+    root["break_minutes"]   = m_break_minutes;
+    root["break_message"]   = m_break_message;
     root["monitors"]        = arr;
 
     if (!m_window_geometry.isEmpty())
         root["window_geometry"] = QString::fromLatin1(m_window_geometry.toBase64());
 
-    QFile file(m_file_path);
-    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate))
-        file.write(QJsonDocument(root).toJson());
+    QSaveFile file(m_file_path);
+    if (!file.open(QIODevice::WriteOnly))
+        return;
+
+    const auto contents = QJsonDocument(root).toJson();
+    if (file.write(contents) == contents.size())
+        file.commit();
 }

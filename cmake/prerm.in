@@ -5,7 +5,7 @@ case "$1" in
 remove|purge)
     # Update icon cache
     if command -v gtk-update-icon-cache >/dev/null 2>&1; then
-        gtk-update-icon-cache -f -t /usr/local/share/icons/hicolor 2>/dev/null || true
+        gtk-update-icon-cache -f -t /usr/share/icons/hicolor 2>/dev/null || true
     fi
     ;;
 esac
