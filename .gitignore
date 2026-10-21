@@ -73,6 +73,7 @@ CTestTestfile.cmake
 *.cmake
 CMakePresets.json
 !CMakeLists.txt
+CMakeLists.txt.user
 
 # Compiled Python files
 __pycache__/

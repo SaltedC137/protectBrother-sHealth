@@ -44,7 +44,7 @@ uint16_t estimate_kelvin(double r, double g, double b) {
 	while(hi - lo > 50) {
 		uint16_t mid = (lo + hi) / 2;
 		auto	 rgb = kelvin_to_rgb(mid);
-		if(rgb.b > b)
+		if(rgb.b < b)
 			lo = mid;
 		else
 			hi = mid;

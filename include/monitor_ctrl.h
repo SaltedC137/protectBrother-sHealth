@@ -12,14 +12,12 @@ struct MonitorInfo {
 
 class MonitorController {
   public:
-    static bool isWaylandSession();
+	static bool isWaylandSession();
 
-    // Query the current display server and return its controllable outputs.
+	// Query the current display server and return its controllable outputs.
 	static QList<MonitorInfo> discover();
 
-    // X11 changes one xrandr output; Wayland uses Redshift's compositor backend.
-    static bool apply(const QString& output,
-                      double brightness,
-                      int temperature_kelvin,
-                      QString* error = nullptr);
+	// X11 changes one xrandr output; Wayland uses Redshift's compositor backend.
+	static bool
+	apply(const QString& output, double brightness, int temperature_kelvin, QString* error = nullptr);
 };
