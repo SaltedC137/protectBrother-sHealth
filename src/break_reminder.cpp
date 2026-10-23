@@ -5,13 +5,16 @@
 #include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QKeyEvent>
+#include <QKeySequence>
 #include <QLabel>
 #include <QScreen>
+#include <QShortcut>
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QWidget>
 
 #include <algorithm>
+#include <qnamespace.h>
 #include <utility>
 
 namespace {
@@ -51,6 +54,7 @@ class BreakWindow final : public QWidget {
 		layout->addStretch();
 
 		setScreen(screen);
+		setGeometry(screen->geometry());
 		updateRemaining();
 
 		auto* refresh_timer = new QTimer(this);
@@ -143,7 +147,13 @@ void BreakReminder::addWindow(QScreen* screen) {
 		return;
 
 	auto* window = new BreakWindow(screen, m_message, m_deadline);
+	window->setAttribute(Qt::WA_QuitOnClose, false);
 	m_windows.append(window);
+
+	auto* shortcut = new QShortcut(QKeySequence(Qt::Key_Escape), window);
+	shortcut->setAutoRepeat(false);
+	connect(shortcut, &QShortcut::activated, this, &BreakReminder::break_skip_requested);
+
 	window->showFullScreen();
 	window->raise();
 }

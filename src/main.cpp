@@ -1,14 +1,20 @@
 #include "mainwindow.h"
+#include "platform_tray.h"
+
 #include <QApplication>
 
 int main(int argc, char* argv[]) {
-	QApplication app(argc, argv);
-	app.setApplicationName("Screen Light Adjust");
-	app.setOrganizationName("screen-light-adjust");
-	app.setDesktopFileName("screen-light-adjust");
 
-	MainWindow w;
-	w.show();
+	QCoreApplication::setApplicationName("Screen Light Adjust");
+	QCoreApplication::setOrganizationName("screen-light-adjust");
+	QGuiApplication::setDesktopFileName("screen-light-adjust");
+
+	PlatformTray::prepare_platform_tray();
+	QApplication app(argc, argv);
+	PlatformTray::restore_kde_palette();
+
+	MainWindow window;
+	window.show();
 
 	return app.exec();
 }

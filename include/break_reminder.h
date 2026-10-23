@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QPointer>
 #include <QStringList>
+#include <qtmetamacros.h>
 
 class QScreen;
 class QWidget;
@@ -22,6 +23,9 @@ class BreakReminder : public QObject {
 
 	int			visible_window_count() const;
 	QStringList visible_messages() const;
+
+  signals:
+	void break_skip_requested();
 
   private:
 	void addWindow(QScreen* screen);

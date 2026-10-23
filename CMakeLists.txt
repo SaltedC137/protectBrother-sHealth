@@ -12,8 +12,11 @@ if(NOT "$ENV{QT_HOME_PATH}" STREQUAL "")
 endif()
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
-include(CTest)
+if(UNIX AND NOT APPLE)
+    find_package(Qt6 REQUIRED COMPONENTS DBus)
+endif()
 
+include(CTest)
 if(BUILD_TESTING)
     find_package(Qt6 REQUIRED COMPONENTS Test)
 endif()
@@ -48,8 +51,18 @@ target_include_directories(screen-light-adjust-core
     PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(screen-light-adjust-core PUBLIC Qt6::Widgets)
 
-add_executable(screen-light-adjust src/main.cpp)
-target_link_libraries(screen-light-adjust PRIVATE screen-light-adjust-core)
+add_executable(screen-light-adjust
+    src/main.cpp
+    src/platform_tray.cpp
+    include/platform_tray.h
+)
+
+if(UNIX AND NOT APPLE)
+    target_link_libraries(screen-light-adjust PRIVATE screen-light-adjust-core Qt6::DBus)
+    target_compile_definitions(screen-light-adjust PRIVATE SCREEN_LIGHT_ADJUST_HAVE_DBUS=1)
+else()
+    target_link_libraries(screen-light-adjust PRIVATE screen-light-adjust-core)
+endif()
 
 set_target_properties(screen-light-adjust PROPERTIES
     INSTALL_RPATH ""

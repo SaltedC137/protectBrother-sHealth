@@ -19,6 +19,7 @@
 #include <QSpinBox>
 #include <QStatusBar>
 #include <QVBoxLayout>
+#include <qapplication.h>
 #include <qnamespace.h>
 #include <qspinbox.h>
 
@@ -45,6 +46,8 @@ MainWindow::MainWindow(QWidget* parent)
 	setup_break_scheduler();
 
 	connect(qApp, &QApplication::aboutToQuit, this, &MainWindow::save_settings);
+
+	connect(qApp, &QApplication::aboutToQuit, this, &MainWindow::restore_default_settings);
 }
 
 // ============================================================
@@ -316,10 +319,11 @@ void MainWindow::setup_ui() {
 }
 
 void MainWindow::setup_tray() {
-	QPixmap pix(22, 22);
+	QPixmap pix(22 * 3, 22 * 3);
 	pix.fill(Qt::transparent);
 	{
 		QPainter p(&pix);
+		p.scale(3, 3);
 		p.setRenderHint(QPainter::Antialiasing);
 		p.setBrush(QColor(255, 180, 30));
 		p.setPen(Qt::NoPen);
@@ -354,6 +358,16 @@ void MainWindow::setup_break_scheduler() {
 	connect(m_timer, &BreakTimer::work_period_finished, this, &MainWindow::on_work_period_finished);
 	connect(m_timer, &BreakTimer::break_period_finished, this, &MainWindow::on_break_period_finished);
 	connect(m_timer, &BreakTimer::remaining_time_changed, this, &MainWindow::update_countdown);
+
+	connect(
+		m_break_reminder,
+		&BreakReminder::break_skip_requested,
+		this,
+		[this] {
+			if(!m_timer->is_working())
+				on_break_period_finished();
+		},
+		Qt::QueuedConnection);
 
 	if(m_break_enabled->isChecked())
 		m_timer->start_work();
@@ -716,6 +730,22 @@ void MainWindow::save_current_as_preset() {
 							 QStringLiteral("保存失败"),
 							 QStringLiteral("预设名称不能包含路径分隔符，或预设文件无法写入。"));
 	}
+}
+
+// unfinished code, but I will continue with the next function
+void MainWindow::restore_default_settings() {
+	const bool was_updating = m_updating;
+	m_updating				= true;
+	m_sync_brightness->setChecked(true);
+	m_sync_night->setChecked(true);
+	for(auto& mw : m_monitors) {
+		mw.brightness_slider->setValue(100);
+		mw.night_mode->setChecked(false);
+		mw.warmth_container->setVisible(false);
+	}
+	for(int i = 0; i < m_monitors.size(); ++i)
+		apply_monitor(i);
+	m_updating = was_updating;
 }
 
 void MainWindow::load_selected_preset() {

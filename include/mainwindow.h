@@ -62,6 +62,7 @@ class MainWindow : public QMainWindow {
 	void apply_preset(const QJsonObject& preset);
 	void load_settings();
 	void save_settings();
+	void restore_default_settings();
 	void refresh_preset_list();
 	void set_break_controls(const QJsonObject& settings);
 
